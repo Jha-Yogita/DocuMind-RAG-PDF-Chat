@@ -1,124 +1,204 @@
-# DocuMind
+# 📄 DocuMind
 
-A local RAG (Retrieval-Augmented Generation) application that lets you chat with PDF documents, generate summaries, flashcards, quizzes, and extract key terms — powered by Groq's fast inference API and local embeddings.
+**DocuMind** is a local **Retrieval-Augmented Generation (RAG)** application that allows you to interact with PDF documents using natural language.
 
----
+Upload a document and instantly **chat with it, generate summaries, flashcards, quizzes, and extract key terms**.
 
-## Features
-
-- **Chat** — Ask any question about your uploaded PDF
-- **Summary** — Auto-generated TL;DR with key topics and findings
-- **Flashcards** — Study cards generated from document content
-- **Quiz** — Multiple-choice questions with explanations and scoring
-- **Key Terms** — Domain-specific vocabulary extracted and defined
+The system uses **local embeddings for retrieval** and **Groq's high-speed inference API** for text generation.
 
 ---
 
-## Requirements
+# ✨ Features
 
-- Python 3.11
-- A free [Groq API key](https://console.groq.com)
+### 💬 Chat with your PDF
+Ask questions about any uploaded document and receive answers grounded in the document content.
+
+### 📑 Automatic Summary
+Generate concise summaries highlighting key topics and findings.
+
+### 🧠 Flashcards
+Create study flashcards from important concepts extracted from the document.
+
+### 📝 Quiz Generator
+Generate **multiple-choice quizzes** with explanations and scoring.
+
+### 🔑 Key Term Extraction
+Automatically detect and define important domain-specific terms.
 
 ---
 
-## Setup
+# 🏗 Architecture
 
-### 1. Clone the repo
+DocuMind follows a **Retrieval-Augmented Generation (RAG)** pipeline:
+
+1. PDF Upload
+2. Text Extraction
+3. Document Chunking
+4. Embedding Generation (Local)
+5. Vector Search
+6. Context Retrieval
+7. Response Generation via Groq LLM
+
+This ensures responses remain **grounded in the document content instead of hallucinated answers**.
+
+---
+
+# ⚙️ Requirements
+
+- Python **3.11**
+- A **Groq API Key**
+- Internet connection for Groq inference
+
+---
+
+# 🚀 Installation
+
+## 1. Clone the repository
 
 ```bash
 git clone https://github.com/yourname/documind.git
 cd documind
 ```
 
-### 2. Create a Python 3.11 virtual environment
+---
+
+## 2. Create a Python 3.11 virtual environment
+
+### Linux / macOS
 
 ```bash
-# Linux / Mac
 python3.11 -m venv rag_env
 source rag_env/bin/activate
+```
 
-# Windows
+### Windows
+
+```bash
 py -3.11 -m venv rag_env
 rag_env\Scripts\activate
 ```
 
-### 3. Install dependencies
+---
+
+## 3. Install dependencies
 
 ```bash
 pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-### 4. Set up environment variables
+---
+
+## 4. Set up environment variables
+
+Copy the example environment file:
 
 ```bash
 cp .env.example .env
 ```
 
-Open `.env` and paste your Groq API key:
+Open `.env` and paste your **Groq API key**:
 
 ```
 GROQ_API_KEY=gsk_xxxxxxxxxxxxxxxxxxxx
 ```
 
-Get a free key at [console.groq.com](https://console.groq.com) → API Keys → Create Key.
+You can get a free key at:
 
-### 5. Run the server
+```
+https://console.groq.com
+```
+
+Navigate to:
+
+```
+API Keys → Create Key
+```
+
+---
+
+# ▶ Running the Application
+
+Start the server:
 
 ```bash
 python server.py
 ```
 
-Open your browser at **http://localhost:8000**
+Open the application in your browser:
+
+```
+http://localhost:8000
+```
 
 ---
 
-## Project Structure
+# 📂 Project Structure
 
 ```
 SUMMARIZE-RAG/
-├── server.py              # Flask app and API routes
-├── worker.py              # LLM calls, RAG pipeline, document processing
-├── requirements.txt       # Python dependencies
-├── .env                   # Your secrets (never commit this)
-├── .env.example           # Template for .env
-├── .gitignore
-├── templates/
-│   └── index.html         # Frontend UI
-├── static/
-│   └── script.js          # Frontend JS
-└── uploads/               # Uploaded PDFs (auto-created, gitignored)
+
+server.py              # Flask app and API routes
+worker.py              # RAG pipeline and document processing
+requirements.txt       # Python dependencies
+.env                   # Environment variables (not committed)
+.env.example           # Template environment file
+.gitignore
+
+templates/
+   index.html          # Frontend interface
+
+static/
+   script.js           # Frontend logic
+
+uploads/               # Uploaded PDFs (auto-created, gitignored)
 ```
 
 ---
 
-## Changing the Model
+# 🤖 Changing the Model
 
-Edit `GROQ_MODEL` in your `.env` file:
+Edit the `.env` file to change the Groq model.
 
-| Model | Speed | Quality | Best for |
-|---|---|---|---|
-| `llama-3.1-8b-instant` | ⚡ Fast | Good | Default, everyday use |
-| `llama-3.3-70b-versatile` | Slower | Excellent | Complex documents |
-| `mixtral-8x7b-32768` | Medium | Good | Long documents |
+| Model | Speed | Quality | Best Use |
+|------|------|------|------|
+| llama-3.1-8b-instant | ⚡ Fast | Good | Default use |
+| llama-3.3-70b-versatile | Slower | Excellent | Complex documents |
+| mixtral-8x7b-32768 | Medium | Good | Long documents |
+
+Example configuration:
+
+```
+GROQ_MODEL=llama-3.1-8b-instant
+```
 
 ---
 
-## Scanned PDFs
+# 📄 Handling Scanned PDFs
 
-If your PDF is image-based (no selectable text), install OCR support and pre-process it:
+If your PDF is **image-based (no selectable text)** you must use OCR.
+
+Install OCR support:
 
 ```bash
 pip install ocrmypdf
-ocrmypdf your_file.pdf your_file_ocr.pdf
 ```
 
-Then upload the `_ocr.pdf` version.
+Convert the file:
+
+```bash
+ocrmypdf input.pdf output_ocr.pdf
+```
+
+Upload the `output_ocr.pdf` version.
 
 ---
 
-## Notes
+# ⚠️ Notes
 
-- Uploaded PDFs are stored in `uploads/` and are gitignored
-- Vector store is in-memory — reupload your PDF after restarting the server
-- Groq free tier has rate limits; wait a moment if you hit them
+- Uploaded PDFs are stored in the **uploads/** folder and ignored by Git.
+- The vector store runs **in memory**, so documents must be reuploaded after restarting the server.
+- Groq free tier has **rate limits**, so brief delays may occur during heavy usage.
+
+---
+
