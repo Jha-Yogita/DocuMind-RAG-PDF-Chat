@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>DocuMind</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300;12..96,400;12..96,500;12..96,600&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;1,6..72,300;1,6..72,400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:         #f7f5f0;
+  --bg2:        #efece5;
+  --bg3:        #e8e4db;
+  --surface:    #ffffff;
+  --border:     rgba(0,0,0,0.08);
+  --border2:    rgba(0,0,0,0.13);
+
+  --ink:        #1c1917;
+  --ink2:       #44403c;
+  --ink3:       #78716c;
+  --ink4:       #a8a29e;
+
+  --sage:       #5c7a6b;
+  --sage-light: #dce8e2;
+  --sage-mid:   #b8d0c5;
+
+  --terracotta: #b5603a;
+  --terra-light:#f2e4da;
+  --terra-mid:  #dba882;
+
+  --slate:      #4a5568;
+  --slate-light:#e8ecf0;
+
+  --gold:       #92742a;
+  --gold-light: #f0e6c8;
+
+  --correct:    #3d6b52;
+  --wrong:      #9b3a3a;
+
+  --font:       'Bricolage Grotesque', sans-serif;
+  --serif:      'Newsreader', Georgia, serif;
+  --r:          10px;
+  --r2:         6px;
+}
+
+html,body{height:100%;background:var(--bg);color:var(--ink);font-family:var(--font);overflow:hidden}
+
+.app{display:grid;grid-template-columns:268px 1fr;height:100vh}
+
+/* ── SIDEBAR ── */
+.sidebar{
+  background:var(--ink);color:#f7f5f0;
+  display:flex;flex-direction:column;overflow:hidden;
+}
+
+.sidebar-head{
+  padding:28px 22px 22px;
+  border-bottom:1px solid rgba(255,255,255,0.07);
+}
+
+.logo-eyebrow{
+  font-size:9px;font-weight:500;letter-spacing:3px;text-transform:uppercase;
+  color:var(--terra-mid);margin-bottom:10px;
+}
+.logo-name{
+  font-family:var(--serif);font-size:26px;font-style:italic;font-weight:400;
+  color:#f7f5f0;line-height:1;letter-spacing:-.3px;margin-bottom:3px;
+}
+.logo-sub{font-size:10px;color:rgba(247,245,240,0.35);font-weight:300;letter-spacing:.3px}
+
+.sidebar-body{
+  flex:1;overflow-y:auto;padding:20px 22px;
+  display:flex;flex-direction:column;gap:22px;
+}
+.sidebar-body::-webkit-scrollbar{width:2px}
+.sidebar-body::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1)}
+
+.s-label{
+  font-size:9px;font-weight:600;letter-spacing:2.5px;text-transform:uppercase;
+  color:rgba(247,245,240,0.3);margin-bottom:10px;
+}
+
+.drop-zone{
+  border:1px dashed rgba(255,255,255,0.15);border-radius:var(--r);
+  padding:22px 14px;text-align:center;cursor:pointer;
+  transition:all .2s;background:rgba(255,255,255,0.03);position:relative;
+}
+.drop-zone:hover,.drop-zone.dragover{
+  border-color:rgba(181,96,58,0.6);background:rgba(181,96,58,0.06);
+}
+.drop-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.drop-icon{font-size:22px;display:block;margin-bottom:8px;opacity:.6}
+.drop-label{font-size:11px;color:rgba(247,245,240,0.4);line-height:1.6}
+.drop-label strong{color:rgba(247,245,240,0.75);display:block;font-size:11px;font-weight:500;margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.progress-bar{height:1px;background:rgba(255,255,255,0.08);overflow:hidden;margin-top:10px;display:none}
+.progress-bar.active{display:block}
+.progress-fill{height:100%;background:var(--terracotta);width:0%;transition:width .3s}
+
+.upload-btn{
+  width:100%;margin-top:10px;padding:11px;
+  border:1px solid rgba(181,96,58,0.5);border-radius:var(--r2);
+  background:rgba(181,96,58,0.12);color:var(--terra-mid);
+  font-family:var(--font);font-size:11px;font-weight:600;letter-spacing:.8px;
+  cursor:pointer;transition:all .2s;
+}
+.upload-btn:hover:not(:disabled){background:var(--terracotta);color:#fff;border-color:var(--terracotta)}
+.upload-btn:disabled{opacity:.2;cursor:not-allowed}
+
+.doc-card{
+  display:none;border-radius:var(--r2);padding:12px 14px;
+  background:rgba(255,255,255,0.05);
+  border:1px solid rgba(255,255,255,0.1);
+  border-left:2px solid var(--terracotta);
+}
+.doc-card.visible{display:block;animation:fadeUp .3s ease}
+.doc-name{font-size:11px;font-weight:500;color:rgba(247,245,240,0.8);margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.doc-meta{font-size:10px;color:rgba(247,245,240,0.3);display:flex;gap:8px;align-items:center}
+.doc-badge{color:var(--sage-mid);font-weight:500;font-size:9px;letter-spacing:.5px}
+
+.sidebar-foot{
+  padding:16px 22px;border-top:1px solid rgba(255,255,255,0.07);
+  display:flex;flex-direction:column;gap:10px;
+}
+.clear-btn{
+  padding:9px;border:1px solid rgba(255,255,255,0.08);border-radius:var(--r2);
+  background:transparent;color:rgba(247,245,240,0.3);font-family:var(--font);
+  font-size:10px;font-weight:500;cursor:pointer;transition:all .15s;width:100%;letter-spacing:.3px;
+}
+.clear-btn:hover{border-color:rgba(155,58,58,0.4);color:rgba(220,130,130,0.8)}
+.status-bar{display:flex;align-items:center;gap:8px;font-size:10px;color:rgba(247,245,240,0.2)}
+.status-dot{width:6px;height:6px;border-radius:50%;background:var(--sage-mid);flex-shrink:0;animation:pulse 2.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+
+/* ── MAIN ── */
+.main{display:flex;flex-direction:column;overflow:hidden;background:var(--bg)}
+
+.nav{
+  padding:0 28px;border-bottom:1px solid var(--border);
+  display:flex;gap:0;overflow-x:auto;flex-shrink:0;
+  background:var(--surface);
+}
+.nav::-webkit-scrollbar{display:none}
+.nav-btn{
+  padding:14px 18px 13px;font-family:var(--font);font-size:11px;font-weight:500;
+  color:var(--ink3);background:transparent;border:none;cursor:pointer;
+  border-bottom:2px solid transparent;transition:all .18s;white-space:nowrap;letter-spacing:.2px;
+}
+.nav-btn:hover{color:var(--ink)}
+.nav-btn.active{color:var(--terracotta);border-bottom-color:var(--terracotta)}
+
+.panel{display:none;flex:1;flex-direction:column;overflow:hidden}
+.panel.active{display:flex}
+
+/* ── CHAT ── */
+.chat-messages{
+  flex:1;overflow-y:auto;padding:28px 36px;
+  display:flex;flex-direction:column;gap:20px;scroll-behavior:smooth;
+}
+.chat-messages::-webkit-scrollbar{width:4px}
+.chat-messages::-webkit-scrollbar-thumb{background:var(--bg3);border-radius:2px}
+
+.empty-state{
+  flex:1;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;text-align:center;padding:40px;
+  opacity:0;animation:fadeIn .5s ease .15s forwards;
+}
+.empty-icon{
+  width:64px;height:64px;border-radius:50%;background:var(--bg2);
+  border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;
+  font-size:26px;margin-bottom:20px;
+}
+.empty-title{
+  font-family:var(--serif);font-size:24px;font-style:italic;
+  color:var(--ink);margin-bottom:8px;font-weight:400;
+}
+.empty-sub{font-size:13px;color:var(--ink3);line-height:1.7;max-width:340px;margin-bottom:26px;font-weight:300}
+.chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.chip{
+  padding:7px 15px;border:1px solid var(--border2);border-radius:100px;
+  font-size:11px;font-weight:500;color:var(--ink2);cursor:pointer;
+  transition:all .15s;background:var(--surface);
+}
+.chip:hover{border-color:var(--terracotta);color:var(--terracotta);background:var(--terra-light)}
+
+/* Messages */
+.msg{display:flex;flex-direction:column;gap:5px;animation:fadeUp .22s ease;max-width:76%}
+.msg.user{align-self:flex-end;align-items:flex-end}
+.msg.bot {align-self:flex-start;align-items:flex-start}
+.msg-label{font-size:9.5px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--ink4);padding:0 3px}
+.msg.user .msg-label{color:var(--terracotta)}
+.msg-bubble{
+  padding:13px 17px;border-radius:14px;font-size:13.5px;line-height:1.75;font-weight:400;
+}
+.msg.user .msg-bubble{
+  background:var(--ink);color:#f7f5f0;
+  border-bottom-right-radius:3px;
+}
+.msg.bot .msg-bubble{
+  background:var(--surface);color:var(--ink);
+  border:1px solid var(--border);border-bottom-left-radius:3px;
+}
+.msg-sources{
+  display:inline-flex;align-items:center;gap:5px;
+  background:var(--gold-light);border:1px solid rgba(146,116,42,0.2);
+  border-radius:100px;padding:3px 10px;font-size:9.5px;font-weight:500;color:var(--gold);
+}
+
+.typing-wrap{display:flex;flex-direction:column;gap:5px;align-self:flex-start}
+.typing-label{font-size:9.5px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--ink4);padding:0 3px}
+.typing-bubble{
+  display:flex;align-items:center;gap:5px;
+  padding:13px 17px;background:var(--surface);border:1px solid var(--border);
+  border-radius:14px;border-bottom-left-radius:3px;width:fit-content;
+}
+.tdot{width:5px;height:5px;border-radius:50%;background:var(--ink4);animation:tdot 1.2s infinite}
+.tdot:nth-child(2){animation-delay:.18s}
+.tdot:nth-child(3){animation-delay:.36s}
+@keyframes tdot{0%,60%,100%{transform:translateY(0);opacity:.3}30%{transform:translateY(-4px);opacity:1}}
+
+.input-area{
+  padding:14px 36px 22px;border-top:1px solid var(--border);
+  flex-shrink:0;background:var(--bg);
+}
+.input-wrap{
+  display:flex;gap:10px;align-items:flex-end;
+  background:var(--surface);border:1px solid var(--border2);
+  border-radius:14px;padding:10px 10px 10px 18px;
+  transition:border-color .2s,box-shadow .2s;
+}
+.input-wrap:focus-within{
+  border-color:rgba(92,122,107,0.5);
+  box-shadow:0 0 0 3px rgba(92,122,107,0.08);
+}
+#message-input{
+  flex:1;background:transparent;border:none;outline:none;
+  color:var(--ink);font-family:var(--font);font-size:13px;
+  resize:none;max-height:110px;min-height:22px;line-height:1.6;
+}
+#message-input::placeholder{color:var(--ink4)}
+.send-btn{
+  width:36px;height:36px;border-radius:8px;border:none;
+  background:var(--ink);color:#f7f5f0;font-size:14px;
+  cursor:pointer;transition:all .15s;display:flex;align-items:center;
+  justify-content:center;flex-shrink:0;
+}
+.send-btn:hover:not(:disabled){background:var(--terracotta)}
+.send-btn:disabled{opacity:.2;cursor:not-allowed}
+.input-foot{display:flex;justify-content:space-between;margin-top:7px;font-size:9.5px;color:var(--ink4)}
+
+/* ── TOOL PANELS ── */
+.tool-panel{flex:1;overflow-y:auto;padding:36px}
+.tool-panel::-webkit-scrollbar{width:4px}
+.tool-panel::-webkit-scrollbar-thumb{background:var(--bg3);border-radius:2px}
+
+.tool-header{
+  display:flex;align-items:flex-start;justify-content:space-between;
+  margin-bottom:32px;gap:20px;padding-bottom:24px;
+  border-bottom:1px solid var(--border);
+}
+.tool-title{
+  font-family:var(--serif);font-size:32px;font-style:italic;font-weight:400;
+  color:var(--ink);letter-spacing:-.5px;margin-bottom:5px;
+}
+.tool-desc{font-size:12px;color:var(--ink3);font-weight:300;line-height:1.6}
+.gen-btn{
+  padding:11px 22px;border:1px solid var(--border2);border-radius:var(--r2);
+  background:var(--ink);color:#f7f5f0;font-family:var(--font);
+  font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;
+  white-space:nowrap;flex-shrink:0;letter-spacing:.3px;
+}
+.gen-btn:hover{background:var(--terracotta);border-color:var(--terracotta)}
+.gen-btn:disabled{opacity:.3;cursor:not-allowed}
+
+.count-row{display:flex;align-items:center;gap:10px}
+.count-label{font-size:9px;font-weight:600;color:var(--ink3);letter-spacing:2px;text-transform:uppercase}
+.count-input{
+  width:50px;padding:7px 8px;background:var(--bg2);border:1px solid var(--border2);
+  color:var(--ink);font-family:var(--font);font-size:12px;border-radius:var(--r2);
+  outline:none;text-align:center;
+}
+.count-input:focus{border-color:var(--sage)}
+
+.loading-msg{text-align:center;padding:64px;color:var(--ink3);font-size:13px;font-weight:300}
+.spinner{
+  width:28px;height:28px;border:1.5px solid var(--border2);border-top-color:var(--ink2);
+  border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+
+.summary-body{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--r);
+  padding:32px;font-size:14px;line-height:1.9;color:var(--ink2);
+  white-space:pre-wrap;font-weight:300;font-family:var(--serif);
+}
+
+.cards-meta{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px}
+.cards-meta-text{font-size:12px;color:var(--ink3);font-weight:300}
+.reset-btn{
+  padding:6px 14px;border:1px solid var(--border2);border-radius:100px;
+  background:transparent;color:var(--ink2);font-family:var(--font);
+  font-size:11px;font-weight:500;cursor:pointer;transition:all .15s;
+}
+.reset-btn:hover{border-color:var(--ink);color:var(--ink)}
+
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
+.card{perspective:1000px;height:165px;cursor:pointer}
+.card-inner{
+  position:relative;width:100%;height:100%;
+  transition:transform .5s cubic-bezier(.4,0,.2,1);transform-style:preserve-3d;
+}
+.card.flipped .card-inner{transform:rotateY(180deg)}
+.card-face{
+  position:absolute;inset:0;border-radius:var(--r);padding:20px;
+  display:flex;flex-direction:column;backface-visibility:hidden;-webkit-backface-visibility:hidden;
+}
+.card-front{background:var(--surface);border:1px solid var(--border2)}
+.card-back{background:var(--bg2);border:1px solid var(--border2);transform:rotateY(180deg)}
+.card-tag{
+  font-size:9px;font-weight:600;letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;
+}
+.card-front .card-tag{color:var(--terracotta)}
+.card-back  .card-tag{color:var(--sage)}
+.card-text{font-size:13px;line-height:1.6;color:var(--ink2);flex:1;overflow-y:auto;font-weight:400}
+.card-hint{font-size:9px;color:var(--ink4);margin-top:8px}
+
+/* ── QUIZ ── */
+.quiz-wrap{display:flex;flex-direction:column;gap:18px}
+.q-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;
+}
+.q-num-bar{
+  padding:10px 20px;background:var(--bg2);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:10px;
+}
+.q-num{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--terracotta)}
+.q-tag{font-size:10px;color:var(--ink4)}
+.q-text{padding:18px 20px 14px;font-size:14px;line-height:1.65;color:var(--ink);font-weight:500}
+.q-options{padding:0 20px 18px;display:flex;flex-direction:column;gap:8px}
+.q-opt{
+  padding:10px 16px;border:1px solid var(--border2);border-radius:var(--r2);
+  font-size:13px;cursor:pointer;transition:all .15s;
+  background:transparent;color:var(--ink2);text-align:left;
+  font-family:var(--font);font-weight:400;
+}
+.q-opt:hover:not(.answered){border-color:var(--ink2);background:var(--bg2)}
+.q-opt.correct{border-color:var(--correct);background:rgba(61,107,82,0.07);color:var(--correct)}
+.q-opt.wrong  {border-color:var(--wrong);  background:rgba(155,58,58,0.06);  color:var(--wrong)}
+.q-explanation{
+  margin:0 20px 16px;padding:12px 14px;
+  background:var(--gold-light);border:1px solid rgba(146,116,42,0.15);
+  border-radius:var(--r2);font-size:12px;color:var(--ink2);
+  line-height:1.65;font-weight:300;display:none;
+}
+.q-explanation.show{display:block}
+.quiz-score{
+  padding:40px;text-align:center;background:var(--surface);
+  border:1px solid var(--border);border-radius:var(--r);
+}
+.quiz-score-num{
+  font-family:var(--serif);font-size:72px;font-style:italic;
+  color:var(--ink);line-height:1;margin-bottom:10px;
+}
+.quiz-score-label{font-size:14px;color:var(--ink3);font-weight:300}
+
+/* ── KEY TERMS ── */
+.terms-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.term-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--r);
+  padding:18px 20px;transition:all .18s;
+}
+.term-card:hover{border-color:var(--sage);background:var(--sage-light)}
+.term-name{
+  font-size:13px;font-weight:600;color:var(--ink);margin-bottom:6px;
+}
+.term-def{font-size:12.5px;line-height:1.65;color:var(--ink3);font-weight:300}
+
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+.toast{
+  position:fixed;bottom:22px;right:22px;
+  background:var(--ink);color:#f7f5f0;
+  border-radius:var(--r);padding:11px 16px;
+  font-size:12px;font-weight:400;z-index:1000;
+  transform:translateY(12px);opacity:0;transition:all .22s;
+  box-shadow:0 4px 24px rgba(0,0,0,0.18);
+}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.success{border-left:3px solid var(--sage)}
+.toast.error  {border-left:3px solid var(--wrong)}
+
+@media(max-width:700px){
+  .app{grid-template-columns:1fr;grid-template-rows:auto 1fr}
+  .sidebar{max-height:52vh}
+  .chat-messages,.tool-panel{padding:16px}
+  .input-area{padding:12px 16px 16px}
+  .msg{max-width:92%}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  
+  <aside class="sidebar">
+    <div class="sidebar-head">
+      <div class="logo-eyebrow">Document Intelligence</div>
+      <div class="logo-name">DocuMind</div>
+      <div class="logo-sub">Groq · RAG · Local Embeddings</div>
+    </div>
+
+    <div class="sidebar-body">
+      <div>
+        <div class="s-label">Your Document</div>
+        <div class="drop-zone" id="drop-zone">
+          <input type="file" id="file-upload" accept=".pdf"/>
+          <span class="drop-icon">📄</span>
+          <div class="drop-label">
+            <strong>Drop PDF here</strong>
+            or click to browse
+          </div>
+        </div>
+        <div class="progress-bar" id="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+        <button class="upload-btn" id="upload-btn" onclick="uploadFile()" disabled>Process Document</button>
+      </div>
+
+      <div class="doc-card" id="doc-card">
+        <div class="doc-name" id="doc-name">—</div>
+        <div class="doc-meta">
+          <span id="doc-pages">—</span>
+          <span class="doc-badge">indexed ✓</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar-foot">
+      <button class="clear-btn" onclick="clearHistory()">Clear Conversation</button>
+      <div class="status-bar">
+        <div class="status-dot"></div>
+        <span>Groq · llama-3.1-8b-instant</span>
+      </div>
+    </div>
+  </aside>
+
+
+  <main class="main">
+    <nav class="nav">
+      <button class="nav-btn active" onclick="switchTab('chat',this)">Chat</button>
+      <button class="nav-btn" onclick="switchTab('summary',this)">Summary</button>
+      <button class="nav-btn" onclick="switchTab('flashcards',this)">Flashcards</button>
+      <button class="nav-btn" onclick="switchTab('quiz',this)">Quiz</button>
+      <button class="nav-btn" onclick="switchTab('terms',this)">Key Terms</button>
+    </nav>
+
+    <div id="panel-chat" class="panel active" style="flex-direction:column">
+      <div class="chat-messages" id="chat">
+        <div class="empty-state" id="empty-state">
+          <div class="empty-icon">💬</div>
+          <div class="empty-title">Ask your document anything</div>
+          <div class="empty-sub">Upload a PDF on the left, then ask questions. Get summaries, flashcards and quizzes from any document.</div>
+          <div class="chips">
+            <div class="chip" onclick="setMsg('Summarise this document')">Summarise</div>
+            <div class="chip" onclick="setMsg('What are the key findings?')">Key findings</div>
+            <div class="chip" onclick="setMsg('What is the main argument?')">Main argument</div>
+            <div class="chip" onclick="setMsg('List all important dates or numbers')">Facts & figures</div>
+          </div>
+        </div>
+      </div>
+      <div class="input-area">
+        <div class="input-wrap">
+          <textarea id="message-input" placeholder="Ask a question about your document…" rows="1"
+            onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+          <button class="send-btn" id="send-btn" onclick="sendMessage()">↵</button>
+        </div>
+        <div class="input-foot">
+          <span>Enter to send · Shift+Enter for new line</span>
+          <span id="char-count"></span>
+        </div>
+      </div>
+    </div>
+
+
+    <div id="panel-summary" class="panel">
+      <div class="tool-panel">
+        <div class="tool-header">
+          <div>
+            <div class="tool-title">Document Summary</div>
+            <div class="tool-desc">Structured overview — TL;DR, key topics, findings and conclusions.</div>
+          </div>
+          <button class="gen-btn" id="btn-summary" onclick="loadSummary()">Generate</button>
+        </div>
+        <div id="summary-content"></div>
+      </div>
+    </div>
+
+    
+    <div id="panel-flashcards" class="panel">
+      <div class="tool-panel">
+        <div class="tool-header">
+          <div>
+            <div class="tool-title">Flashcards</div>
+            <div class="tool-desc">Click any card to flip between question and answer.</div>
+          </div>
+          <div class="count-row">
+            <span class="count-label">Count</span>
+            <input class="count-input" id="card-count" type="number" value="8" min="4" max="20"/>
+            <button class="gen-btn" id="btn-cards" onclick="loadFlashcards()">Generate</button>
+          </div>
+        </div>
+        <div id="cards-content"></div>
+      </div>
+    </div>
+
+ 
+    <div id="panel-quiz" class="panel">
+      <div class="tool-panel">
+        <div class="tool-header">
+          <div>
+            <div class="tool-title">Quiz</div>
+            <div class="tool-desc">Multiple-choice questions with explanations. See your score at the end.</div>
+          </div>
+          <div class="count-row">
+            <span class="count-label">Count</span>
+            <input class="count-input" id="quiz-count" type="number" value="5" min="3" max="15"/>
+            <button class="gen-btn" id="btn-quiz" onclick="loadQuiz()">Generate</button>
+          </div>
+        </div>
+        <div id="quiz-content"></div>
+      </div>
+    </div>
+
+   
+    <div id="panel-terms" class="panel">
+      <div class="tool-panel">
+        <div class="tool-header">
+          <div>
+            <div class="tool-title">Key Terms</div>
+            <div class="tool-desc">Domain-specific vocabulary extracted and explained.</div>
+          </div>
+          <button class="gen-btn" id="btn-terms" onclick="loadTerms()">Generate</button>
+        </div>
+        <div id="terms-content"></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+<script src="/static/script.js"></script>
+</body>
+</html>
