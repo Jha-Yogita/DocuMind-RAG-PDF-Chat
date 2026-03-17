@@ -1,13 +1,28 @@
+# Python 3.11 recommended
+# pip install -r requirements.txt
+
 flask==3.0.3
 flask-cors==4.0.1
-flask-socketio
-gunicorn
-eventlet
 
-groq
-faster-whisper
-gtts
+# LangChain
+langchain==0.2.16
+langchain-community==0.2.16
+langchain-huggingface==0.0.3
+langchain-text-splitters==0.2.4
 
-pypdf
-requests
+# Embeddings only 
+sentence-transformers==3.1.1
+torch==2.4.1          
+
+# Vector store
+chromadb==0.4.24
+
+# PDF loader
+pypdf==4.3.1
+
+# HTTP client for Ollama
+requests==2.32.3
+
+# Misc
+accelerate==0.34.2
 python-dotenv==1.0.1
